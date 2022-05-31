@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-demo
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      bb: web
+  template:
+    metadata:
+      labels:
+        bb: web
+    spec:
+    #node-selector-start
+      nodeSelector:
+        dedicated: master
+      tolerations:
+      - key: dedicated
+        operator: Equal
+        value: master
+        effect: NoSchedule
+        #node-selector-end
+      containers:
+      - name: test-site
+        image: niraimathikgc/newdemo
+        ports:
+        - containerPort: 80         #exposes the port in the container
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-entrypoint
+  namespace: default
+spec:
+  #type: NodePort
+  selector:
+    bb: web
+  ports:
+    - port: 260                #to refer the target port
+      targetPort: 80          #refers the container port which is exposed in the deployment
+      nodePort: 30002
+  type: NodePort #LoadBalancer
+ # externalIPs:
+ # - 192.168.3.176
+
